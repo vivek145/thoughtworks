@@ -1,0 +1,43 @@
+--- # DB Installation
+  
+- hosts: all
+  user: centos
+  sudo: yes
+  vars:
+     mysql_root_password: passwd
+  tasks:
+
+    - name: Install MYSQL
+      yum:
+        name: mariadb-server 
+        state: present
+    
+    - name: Install php
+      shell: yum install -y php
+
+    - name: Install php-mysql
+      shell: yum install -y php-mysql
+
+    - name: Install the Python MySQL
+      yum: pkg=MySQL-python state=latest
+
+    - name: start mysql server and enable it on reboot
+      service: name=mariadb state=started enabled=true #debian: mysql
+
+    - name: update mysql root password 
+      mysql_user:
+        name: root
+        host: localhost
+        password: "{{ mysql_root_password }}"
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
+        check_implicit_admin: yes
+        priv: "*.*:ALL,GRANT"
+      with_items:
+        - localhost
+        - name: Copy the root credentials as .my.cnf file
+          template: src=root.cnf.j2 dest=~/.my.cnf mode=0600
+   
+    - name: Create a new databse
+      mysql_db: name=my_wiki state=present login_user=root login_password={{ mysql_root_password }}
+
