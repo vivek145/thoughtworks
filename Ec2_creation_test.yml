@@ -12,7 +12,7 @@
     - name: Setting up Security/Firewall Group
       ec2_group:
          name: Test_Security_Grp
-         description: Rules Allowing Traffic on port 22 and 80
+         description: Rules Allowing Traffic
          region: us-west-2
          rules:
           - proto: tcp
