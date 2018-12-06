@@ -1,0 +1,54 @@
+---
+- hosts: localhost
+
+  tasks:
+
+    - name: Create VPC
+      ec2_vpc:
+        state: present
+        cidr_block: 172.30.0.0/16
+        region: us-west-2
+        resource_tags: { "Name":"VPC_test" }
+      register: vpc
+
+    - name: Get vpc ID
+      debug:
+          msg: "{{ vpc.vpc.id }}"
+   
+    - name: Create subnet
+      ec2_vpc_subnet:
+        state: present
+        vpc_id: "{{ vpc.vpc.id }}"
+        cidr: 172.30.16.0/24
+        az: us-west-2a
+        resource_tags: { "Name":"subnet_test" }
+        region: us-west-2
+      register: subnet
+   
+    - name: Get subnet ID
+      debug:
+          msg: "{{ subnet.subnet.id }}"
+
+    - name: Create IGW
+      ec2_vpc_igw:
+        vpc_id: "{{ vpc.vpc.id }}"
+        region: us-west-2
+        state: present
+      register: igw
+
+    - name: Get Gateway ID
+      debug: 
+          msg: "{{ igw.gateway_id }}"           
+        
+    - name: Route IGW
+      ec2_vpc_route_table:
+        vpc_id: "{{ vpc.vpc.id }}"
+        region: us-west-2
+        subnets:
+          - "{{ subnet.subnet.id }}"
+        routes:
+          - dest: 0.0.0.0/0
+            gateway_id: "{{ igw.gateway_id }}"
+        tags:
+          Name: route_test
+         
